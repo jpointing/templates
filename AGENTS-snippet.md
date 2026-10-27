@@ -1,0 +1,8 @@
+<!-- Paste this into each repo's AGENTS.md, near the top. Replace <memory place> with where this repo keeps its memory (for example "the place `TAXONOMY.md` names"). Pair it with templates/CLAUDE.md. -->
+## Shared practices and memory
+
+- **Shared rules:** from [`jpointing/best-practices`](https://github.com/jpointing/best-practices), read `standards/process.md` (shared working rules) and `standards/decisions.md` (global decisions). This repo's own rules win where they differ.
+- **Environment:** facts about the PC, WSL, editors and home setup are in the environment notes on the PC. Start at the index, `~/.agents/environments.md`, which lists the files in `~/.agents/environments/`. Don't copy them into this repo. Boards, ports and tools that only this repo uses live in its runbooks.
+- **Skills:** shared agent skills live in [`jpointing/agent-skills`](https://github.com/jpointing/agent-skills).
+- **Issues:** only work on issues labelled `ready`, which means James has reviewed them. Issues raised by bots carry `triage` and wait for his review. Never add `ready` yourself.
+- **Memory:** facts about this repo live in this repo, in <memory place>, and never in a tool's private memory. Tool auto-memory is turned off where the tool allows it; where it can't be, don't use it for repo facts. Rules that apply across repos go in `best-practices/standards/`, and a fact about the PC goes in the right file of the environment notes on the PC (`~/.agents/environments/`), with any new file listed in their index, `~/.agents/environments.md`. Agents may propose a new or changed memory, but write it only after James has approved the exact wording. Session notes and per-run automation memory (`.agents/automation-memory/`) are exempt; see `standards/process.md`.

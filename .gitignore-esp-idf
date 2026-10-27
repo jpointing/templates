@@ -1,0 +1,84 @@
+# Generic .gitignore for ESP-IDF + Python repos.
+# Copy to the repo root as .gitignore, then add repo-specific paths at the end.
+# If the ESP-IDF project is in a subfolder (for example Code/), the
+# unanchored patterns below still match.
+
+# --- ESP-IDF build output ---
+build/
+build-*/
+**/build/
+*.bin
+*.elf
+*.map
+flasher_args.json
+# Need to commit a .bin on purpose (evidence, fixtures)? Add an exception, e.g.
+# !qa/evidence/**/*.bin
+
+# --- ESP-IDF generated config (local, may hold credentials) ---
+sdkconfig
+sdkconfig.old
+sdkconfig.defaults.local
+
+# --- ESP-IDF components ---
+managed_components/
+**/components/.idf/
+.espressif/
+
+# --- CMake / host-test build products ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+CMakeUserPresets.json
+*.o
+*.a
+*.out
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.pytest_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# --- Secrets and local config (commit an *.example template instead) ---
+.env
+*.local.json
+secrets/
+
+# --- Editors and language servers ---
+# ESP-IDF's VS Code extension regenerates these for the selected target.
+# Drop the settings.json line if the repo deliberately commits it (lazywifi2 does).
+.vscode/settings.json
+.vscode/c_cpp_properties.json
+.clangd/
+.ccls-cache/
+*.user
+*.suo
+
+# --- Agent tool scratch ---
+# Claude Code worktrees: keep shared settings and hooks, ignore the rest.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+
+# --- OS and temp files ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+
+# --- Repo-specific entries below ---

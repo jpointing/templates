@@ -1,0 +1,37 @@
+# Line endings: store text as LF and check it out as LF on every machine,
+# whatever core.autocrlf says. This line must stay FIRST. Later lines override
+# it, because for patterns that match equally the last one wins.
+* text=auto eol=lf
+
+# Windows batch files need CRLF to run reliably.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# PowerShell runs fine with LF. Both source repos already store .ps1 as LF.
+*.ps1   text eol=lf
+*.psm1  text eol=lf
+*.psd1  text eol=lf
+
+# Shell scripts must be LF, or they fail on Linux and on the Pi.
+*.sh    text eol=lf
+
+# Binary: never convert or diff.
+*.bin   binary
+*.elf   binary
+*.map   -diff
+*.o     binary
+*.a     binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary
+*.gz    binary
+*.sr    binary
+*.xlsx  binary
+
+# Repo-specific exemptions go BELOW this line. Examples from the source repos:
+#   qa/fixtures/** -text                 (byte-hashed fixtures: BLE_HA_proxy)
+#   Code/littlefs_image/** -whitespace   (asset/.gz pairs: lazywifi2)
