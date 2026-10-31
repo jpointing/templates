@@ -24,6 +24,9 @@ jobs:
             | tar -xz -C /usr/local/bin gitleaks
           gitleaks version
 
+      - name: Hook template tests
+        run: sh githooks/test-hooks.sh
+
       - name: Gitleaks
         run: gitleaks detect --source . --verbose --redact
 

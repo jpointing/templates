@@ -1,0 +1,33 @@
+# Per-repo settings for the shared pre-push gate. Copy to .githooks/hooks.conf
+# and edit. The file is sourced by /bin/sh, so keep it to plain assignments.
+# Every command runs from the repository root with GIT_* variables cleared, and
+# with PUSH_GATE_BASE set to the PR base (for example origin/main), so a check
+# can limit itself to what the branch changes.
+
+# Host tests. Leave empty only if the repo has no host-runnable tests, and say
+# so in the repo's exceptions file.
+#   Python:  HOOK_HOST_TESTS='python3 -m pytest -q'
+#   C/CMake: HOOK_HOST_TESTS='cmake -S tests -B build/host-tests && cmake --build build/host-tests && ctest --test-dir build/host-tests --output-on-failure'
+HOOK_HOST_TESTS=''
+
+# block (default): a failing run refuses the push. warn: opt-in per repo; it
+# prints a warning and the push goes ahead, leaving CI as the authority. Use
+# warn only for suites too slow or machine-specific to run on every push, and
+# record why in the repo's exceptions file.
+HOOK_HOST_TESTS_MODE='block'
+
+# Formatting check of what the branch changes, never a rewrite. It must exit
+# non-zero when a changed line is not formatted.
+#   Python:  HOOK_FORMAT_CHECK='git diff --name-only --diff-filter=ACMR "$PUSH_GATE_BASE"...HEAD -- "*.py" | xargs -r ruff format --check'
+#   C:       HOOK_FORMAT_CHECK='test -z "$(git clang-format --diff "$PUSH_GATE_BASE" -q)"'
+HOOK_FORMAT_CHECK=''
+
+# Secret scan. Empty means the default: gitleaks over only the commits the push
+# adds (PR base..pushed commit), using the repo's .gitleaks.toml if it has one.
+# The whole history is scanned monthly in CI (workflows/secret-scan-full.yml).
+# Set a command here only to replace gitleaks with the repo's own scanner; it
+# gets PUSH_GATE_BASE and PUSH_GATE_SHA.
+HOOK_SECRET_SCAN=''
+
+# Set to 0 to skip checking an open PR's base against the gate's base (needs gh).
+HOOK_CHECK_PR_BASE=1
