@@ -18,11 +18,11 @@ expect() { # <0|1> <name> <command...>
 
 git init -q --bare "$tmp/remote.git"
 git clone -q "$tmp/remote.git" "$tmp/seed" 2>/dev/null
-cd "$tmp/seed"
+cd "$tmp/seed" || exit 1
 mkdir .githooks; cp "$src/pre-push" "$src/install.sh" "$src/check-hooks.sh" .githooks/
 printf "HOOK_CHECK_PR_BASE=0\nHOOK_FORMAT_CHECK='! grep -rl BADFORMAT --include=*.txt .'\nHOOK_HOST_TESTS='! test -e FAILTEST'\nHOOK_HOST_TESTS_MODE=\${MODE:-block}\n" > .githooks/hooks.conf
 echo one > a.txt; git add -A; git commit -qm one; git push -q origin main
-cd "$tmp"; git clone -q "$tmp/remote.git" work; cd work
+cd "$tmp" || exit 1; git clone -q "$tmp/remote.git" work; cd work || exit 1
 sh .githooks/install.sh >/dev/null
 
 expect 1 "refuse push from local main" git push -q origin main:refs/heads/grok/x
@@ -64,7 +64,14 @@ echo y2 >> y.txt; git commit -qam y2
 expect 1 "refuse an invalid PR base" git push -q origin fix/y
 git config branch.fix/y.pushGateBase origin/issues/2026-01-02
 git fetch -q; git reset -q --hard origin/main; echo z > z.txt; git add z.txt; git commit -qm z
-expect 1 "refuse a non-fast-forward push to a fix branch" git push -q -f origin fix/y
+expect 0 "allow a lease rewrite of a fix branch" git push -q --force-with-lease origin fix/y
+# Someone else moves fix/y; a rewrite without fetching first must be refused.
+(cd "$tmp/seed" && git fetch -q && git switch -q -c fix/y origin/fix/y && echo w > w.txt && git add w.txt \
+    && git commit -qm w && git push -q --no-verify origin fix/y)
+git commit -q --amend -m z2
+expect 1 "refuse a rewrite of a fix branch someone else moved" git push -q -f origin fix/y
+grep -q "force-with-lease" "$tmp/out" && ok "  ...suggesting fetch and --force-with-lease" || bad "  ...suggesting fetch and --force-with-lease"
+expect 1 "refuse a force push to main" git push -q -f origin fix/y:main
 expect 1 "refuse deleting a shared branch" git push -q origin :fix/y
 
 # A hook from another checkout that differs is refused.

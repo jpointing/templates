@@ -2,7 +2,10 @@
 # Shared push gate (templates repo). Refuses a push unless:
 #   1. Git ran this checkout's own tracked hook (not one from another checkout);
 #   2. it is not from local main, to main, or a deletion of a shared branch;
-#   3. a shared branch (issues/*, fix/*, feature/*) only moves forward;
+#   3. a shared branch (issues/*, fix/*, feature/*) only moves forward, unless
+#      the rewrite is a lease push: the remote tip still equals your
+#      remote-tracking ref from before this push, so nobody else has moved it
+#      (what --force-with-lease checks; the hook can't see the flag itself);
 #   4. the branch contains its PR base, and an open PR targets that same base;
 #   5. the secret scan, formatting check and host tests pass.
 # Per-repo commands live in .githooks/hooks.conf (see hooks.conf.example).
@@ -61,6 +64,11 @@ HOOK_SECRET_SCAN=''; HOOK_CHECK_PR_BASE=1
 # that runs git in a temp repo will act on this repository instead.
 # shellcheck disable=SC2046  # word splitting is intended: one -u NAME pair per variable
 run_clean() { env $(env | sed -n 's/^\(GIT_[A-Za-z_]*\)=.*/-u \1/p') sh -c "$1"; }
+
+# Remote-tracking tips as they were before this push's fetch: the lease for a
+# rewrite of a shared branch.
+leases=$(git for-each-ref --format='%(refname) %(objectname)' "refs/remotes/$remote/")
+lease_of() { printf '%s\n' "$leases" | awk -v ref="refs/remotes/$remote/$1" '$1 == ref { print $2 }'; }
 
 git fetch --quiet "$remote" || { fail fetch "git fetch $remote failed." "Fix network or credentials, then push again."; exit 1; }
 
@@ -125,7 +133,13 @@ while read -r local_ref local_sha remote_ref remote_sha; do
         if ! git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
             fail stale "'$target' moved on $remote since your fetch." "git fetch $remote && git merge $remote/$target"; continue
         elif ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
-            fail non-fast-forward "Refusing to rewrite shared branch '$target'; merge instead of rebasing or force-pushing."; continue
+            if [ "$(lease_of "$target")" = "$remote_sha" ]; then
+                say "rewriting '$target': $remote still has the tip you last fetched."
+            else
+                fail lease "'$target' moved on $remote since your last fetch, so rewriting it could drop someone else's work." \
+                    "git fetch $remote, check $remote/$target, then: git push --force-with-lease $remote $target"
+                continue
+            fi
         fi
     fi
 
